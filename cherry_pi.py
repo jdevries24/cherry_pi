@@ -180,8 +180,7 @@ class cherry_pi:
    
 if (__name__ == "__main__") and True:
    import os
-   #program_treads = os.cpu_count() #defult is to everthing avil
-   program_treads = 4
+   program_treads = os.cpu_count() #defult is to everthing avil
    Chudnovsky_l = 1000 #this is a small limit will only get about 1444 good digits
    rounds = Chudnovsky_l // 1000 #the higher the Chudnovsky_l the higher the rounds. In theory this could be the same but that alot of read writes
    digits = 1000 #not how much digits you wan't how much digits are going to get estracted from the final fraction
