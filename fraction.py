@@ -23,8 +23,10 @@ class fraction:
       #return self.add_method_a(o)
       g = math.gcd(self.d,o.d)
       if g == 1:
-         lcm = (self.d*o.d)
-         return fraction((o.d*self.n) + (self.d*o.n),lcm,False)
+         lcm = (self.d*o.d) 
+         a = lcm // self.d 
+         b = lcm // o.d
+         return fraction((a*self.n) + (b*o.n),lcm,False)
       else:
          num = (self.n*o.d) + (o.n * self.d)
          return fraction(num,self.d*o.d)
@@ -81,7 +83,7 @@ class pi_tools:
       f.close()
       
    def int_to_bytes(a_int):
-      min_bits = int(math.log2(a_int)) + 1
+      min_bits = int(math.log2(abs(a_int))) + 1
       min_bytes = (min_bits//8) + 2
       return a_int.to_bytes(min_bytes,'big',signed=True)
       
