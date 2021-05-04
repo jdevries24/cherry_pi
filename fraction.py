@@ -2,32 +2,37 @@ import math
 class fraction:
    
    #class for representing rational numbers. Allows for the four basic operations 
-   def __init__(self,N,D):
+   def __init__(self,N,D,cannon = True):
       if (N == 0):
          self.n = 0
          self.d = 1
          return
-      g = math.gcd(N,D)
-      self.n = N//g
-      self.d = D//g
+      if cannon:
+         g = math.gcd(N,D)
+         N = N // g
+         D = D // g
+      self.n = N
+      self.d = D
       
    def __str__(self):
       #usefull for looking at what a fraction looks like
-      return str(self.n) + "\n/\n" + str(self.d)
+      return str(self.n) + "/" + str(self.d)
    
    def __add__(self,o):
       #find the denominators least common multiple set both fractions to it and then add
-      n_lcm = (self.d * o.d) // math.gcd(self.d , o.d)
-      my_f = n_lcm // self.d
-      o_f = n_lcm // o.d
-      return fraction((self.n*my_f) + (o.n*o_f),n_lcm)
+      #return self.add_method_a(o)
+      g = math.gcd(self.d,o.d)
+      if g == 1:
+         lcm = (self.d*o.d)
+         return fraction((o.d*self.n) + (self.d*o.n),lcm,False)
+      else:
+         num = (self.n*o.d) + (o.n * self.d)
+         return fraction(num,self.d*o.d)
    
    def __sub__(self,o):
       #same as above only subtract
-      n_lcm = (self.d * o.d) // math.gcd(self.d , o.d)
-      my_f = n_lcm // self.d
-      o_f = n_lcm // o.d
-      return fraction((self.n*my_f) - (o.n*o_f),n_lcm)
+      num = (self.n * o.d) - (o.n * self.n)
+      return fraction(num,self.d*o.d,False)
    
    def __mul__(self,o):
       #easyst of all operations just multiply the numerator and denominator
@@ -42,6 +47,7 @@ class fraction:
    
    def inverse(self):
       return fraction(self.d,self.n)
+   
    
 class pi_tools:
    #collection of useful algorthms for the program
@@ -96,5 +102,8 @@ class pi_tools:
       f = open(file_name+"d",'rb')
       den = int.from_bytes(f.read(),'big',signed=True)
       f.close()
-      return fraction(num,den)
+      frac = fraction(0,1) #skip over the intilizer no need to check for gcd assume fraction is reduced allredy
+      frac.n = num 
+      frac.d = den
+      return frac
    

@@ -13,6 +13,7 @@ class maths:
       i = n//d
       s = 0
       while ((n != 0) and (s < pers)):
+         print(s,end = '\r')
          s += 1
          n = n - (i * d)
          if (n == 0) or (n == or_n):
@@ -31,23 +32,35 @@ class maths:
          result = result * (n - i)
       return result
    
-   def sqrt_10005(start,end,base = None,terminal = None):
+   def sqrt_10005(rounds):
       #as the Chudnovsky algorithm uses the sqrt(10005) a method is needed
       #this method simply calculates the continues fraction that is sqrt(10005)
-      operators = (200,40)
-      result = fraction(operators[(end) % 2],1)
-      if base != None:
-         result = result + base.inverse()
-      for i in range(end,start,-1):
-         #run it backwards
-         result = fraction(operators[i % 2],1) + result.inverse()
-         if (i % 100 == 0):
-            print("Sqrt",end,"to",start,"is at",i)
-      print("#####Sqrt",end,"to",start,"is Done!#####")
-      if terminal != None:
-         terminal.send(result)
-         terminal.close()
-      return result
+      h,k = 0,0
+      h1 = 100
+      h2 = 1
+      k1 = 1
+      k2 = 0
+      nums = (40,200)
+      for i in range(rounds):
+         print(i,end = '\r')
+         a = nums[i % 2]
+         h = (a*h1) + h2
+         k = (a*k1) + k2
+         h2,k2 = h1,k1
+         h1,k1 = h,k
+      return fraction(h,k)
+   
+   def c_fraction(base,coeffic,rounds):
+      h,k,h2,k1,k2 = 0,0,1,1,0
+      h1 = base
+      for i in range(rounds):
+         print(i,end = '\r')
+         a = coeffic[i % len(coeffic)]
+         h = (a*h1) + h2
+         k = (a*k1) + k2
+         h2,k2 = h1,k1
+         h1,k1 = h,k
+      return fraction(h,k)
    
    def Chudnovsky_algorithm(start,end):
       #this is where the magic happens the algorthem is pi=C(sum((M*L)/X),0,infinity)^-1
@@ -68,8 +81,8 @@ class maths:
          M = M * fraction(pow(K,3) - (16 * K),pow(q+1,3))
          K = K + 12
          if (q % 100) == 0:
-            print("  Pi",start,"to",end,"is at",q)
-      print("######  Pi",start,"to",end,"is done#####")
+            print("Pi",start,"to",end,"is at",q)
+      print("###### Pi",start,"to",end,"is done #####")
       return result
    
    def sum_seq_fraction(fractions):
@@ -104,13 +117,12 @@ class cherry_pi:
       
    def Find_C(rounds):
       #the C part of the algorithm is 426880 * SQRT(10005) this is where we get that fraction
-      m_sqrt = maths.sqrt_10005(0,rounds)
-      m_sqrt = fraction(100,1) + m_sqrt.inverse() #the sqrt_10005 method only gets us the fraction part of the 
-      #sqrt and comes in inverted we need to add the integer part and save it. 
+      print("finding SQRT of 10005",rounds)
+      m_sqrt = maths.sqrt_10005(rounds)
+      print("multipling 426880")
       m_sqrt = fraction(m_sqrt.n*426880,m_sqrt.d)
-      pi_tools.save_fraction("SQRT_10005",m_sqrt)#as of now the implentation is use SQRT as a constent. Its easer to compute
-      #don't wan't to compute it every run ya know
-      
+      return m_sqrt
+   
    def check_precision(pi_string):
       #runs through what your pi string 
       #and compares it to a known pi string 
@@ -128,31 +140,50 @@ class cherry_pi:
       print("all",len(pi_string)-2,"digits correct")
       return len(pi_string)-1
    
-   def run(Chudnovsky_limit,Chudnovsky_rounds,threads = 1,digits = 100,save_file = "1000"):
+   def run_final(files,digits,save_file,C_limit = None):
+      print("doing final calculations")
+      files_names = []
+      for i in range(files):
+         files_names.append(str(i))
+      print("adding all Chudnovsky rounds")
+      pi_fraction = cherry_pi.add_file_seq(files_names,"pi/pi") #see above
+      C = fraction(0,1)
+      if C_limit == None:
+         C = pi_tools.open_fraction("SQRT_10005")
+      else:
+         C = cherry_pi.Find_C(C_limit)
+      print("Multipling by C")
+      pi_fraction = C * pi_fraction.inverse() #times the sqrt_fraction to the inverse of the pi fraction
+      pi_tools.save_string("pi_str/Pi_fraction_of_"+save_file,pi_fraction) # save the pi fraction because we may be able to use more of it
+      print("Dividing pi fraction",digits)
+      pi_decimal = maths.string_divide(pi_fraction.n,pi_fraction.d,digits) # get the decimal part by doing old school division
+      good_to = cherry_pi.check_precision(pi_decimal) #see if we nailed it
+      pi_tools.save_string("pi_str/Pi_of_"+save_file,pi_decimal[:good_to])
+      print("attempted to calcualate",digits,"digits")
+      
+   def run(Chudnovsky_limit,Chudnovsky_rounds,threads = 1,digits = 100,save_file = "1000",C_limit = None):
       args = pi_tools.split_up_iteration_even(0,Chudnovsky_limit,Chudnovsky_rounds)
       files = [] #files range from 0 to number of Chudnovsky rounds
+      rounds_done = 0
       for i in range(Chudnovsky_rounds):
-         cherry_pi.run_Chudnovsky_round(args[i][0],args[i][1],threads,str(i),"pi/pi") #for your own system you should set "pi/pi" to
-         #your own path so your home folder doesn't get swamped with pi0d and so on
-         files.append(str(i))
+         try:
+            cherry_pi.run_Chudnovsky_round(args[i][0],args[i][1],threads,str(i),"pi/pi") #for your own system you should set "pi/pi" to
+            #your own path so your home folder doesn't get swamped with pi0d and so on
+            rounds_done += 1
+         except KeyboardInterrupt:
+            break
       print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
       print("$ Done with all Chudnovsky $")
       print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
-      print("doing final calculations")
-      pi_fraction = cherry_pi.add_file_seq(files,"pi/pi") #see above
-      pi_fraction = pi_tools.open_fraction("SQRT_10005") * pi_fraction.inverse() #times the sqrt_fraction to the inverse of the pi fraction
-      pi_tools.save_string("Pi_fraction_of_"+save_file,pi_fraction) # save the pi fraction because we may be able to use more of it
-      pi_decimal = maths.string_divide(pi_fraction.n,pi_fraction.d,digits) # get the decimal part by doing old school division
-      good_to = cherry_pi.check_precision(pi_decimal) #see if we nailed it
-      pi_tools.save_string("Pi_of_"+save_file,pi_decimal[:good_to])
-      print("attempted to calcualate",digits,"digits")
+      cherry_pi.run_final(rounds_done,digits,save_file,C_limit)
+      
    
-if __name__ == "__main__":
+if (__name__ == "__main__") and True:
    import os
-   program_treads = os.cpu_count() #defult is to everthing avil
+   #program_treads = os.cpu_count() #defult is to everthing avil
+   program_treads = 4
    Chudnovsky_l = 1000 #this is a small limit will only get about 1444 good digits
-   rounds = 5 #the higher the Chudnovsky_l the higher the rounds. In theory this could be the same but that alot of read writes
+   rounds = Chudnovsky_l // 1000 #the higher the Chudnovsky_l the higher the rounds. In theory this could be the same but that alot of read writes
    digits = 1000 #not how much digits you wan't how much digits are going to get estracted from the final fraction
    save_file = str(Chudnovsky_l) #what the postfix off all the save files for this run
-   cherry_pi.run(Chudnovsky_l,rounds,program_treads,digits,save_file)
-   
+   cherry_pi.run(Chudnovsky_l,rounds,program_treads,digits,save_file,3500)
